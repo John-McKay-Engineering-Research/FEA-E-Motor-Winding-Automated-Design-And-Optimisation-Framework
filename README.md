@@ -9,10 +9,12 @@ This project was developed from my PhD research on **algorithmically designed an
 ## Workflow overview
 
 <p align="center">
-  <img src="docs/images/workflow_overview.png"
-       alt="Workflow overview for the electric motor winding optimisation framework"
-       width="950">
+  <img src="docs/images/optislang_workflow_overview.png"
+       alt="OptiSLang workflow overview showing the Python interconnect, sensitivity analysis, surrogate modelling, MOGA optimisation, and validation stages"
+       width="1100">
 </p>
+
+The automation workflow links OptiSLang, Python, and Ansys Maxwell into a closed-loop optimisation process. Python interconnect scripts receive design variables from OptiSLang, build structured conductor geometry inputs, call experiment workflows, generate Maxwell VBScript automation, launch simulations, extract loss and torque outputs, and return objective values for sensitivity analysis, surrogate modelling, and multi-objective optimisation.
 
 ```mermaid
 flowchart TD
@@ -65,6 +67,14 @@ The automation framework supports:
 
 This enabled large-scale winding design exploration using a combination of **high-fidelity FEA**, **sensitivity analysis**, **surrogate modelling**, and **genetic algorithms**. Across the wider research programme, the workflow was used to generate over **25,000 unique FEA models** and explore more than **300,000 winding design iterations**.
 
+<p align="center">
+  <img src="docs/images/hybrid_motor_model.png"
+       alt="Hybrid finite element motor model showing stator geometry, winding slot regions, and example conductor placement within the stator"
+       width="1000">
+</p>
+
+The hybrid motor model above shows the wider simulation context in which the generated winding configurations are embedded. Candidate conductor arrangements are first generated within slot boundaries, then transferred into the Maxwell motor model for electromagnetic analysis and loss evaluation.
+
 ---
 
 ## Example winding layouts
@@ -74,30 +84,40 @@ The repository currently contains two representative refactored optimisation wor
 - **Orderly Stage 2** — orderly conductor placement workflow
 - **Layered Stage 5** — layered conductor arrangement and rotation optimisation workflow
 
-### Orderly Stage 2 example layout
+These layouts illustrate the range of conductor packing strategies explored by the optimisation framework, including mixed-shape conductor populations, structured layered arrangements, and different slot-filling patterns.
+
+### Mixed-shape generated winding configurations
 
 <p align="center">
-  <img src="docs/images/orderly_stage2_layout.png"
-       alt="Example orderly conductor layout"
-       width="700">
+  <img src="docs/images/generated_winding_layout_1.png"
+       alt="Generated winding layout showing mixed conductor shapes including circles, polygons, triangles, and squares packed within slot boundaries"
+       width="900">
 </p>
 
-### Layered Stage 5 example layout
+<p align="center">
+  <img src="docs/images/generated_winding_layout_2.png"
+       alt="Second generated winding layout showing a different mixed-shape conductor packing configuration within slot boundaries"
+       width="900">
+</p>
+
+### Structured / layered winding configuration example
 
 <p align="center">
-  <img src="docs/images/layers_stage5_layout.png"
-       alt="Example layered conductor layout"
-       width="700">
+  <img src="docs/images/structured_winding_layout.png"
+       alt="Structured layered winding configuration showing a more regular conductor arrangement within slot boundaries"
+       width="760">
 </p>
 
 ---
 
 ## Architecture
 
+The repository is organised around a Python-driven workflow that connects OptiSLang interconnect scripts, experiment logic, Maxwell automation generation, and simulation result processing.
+
 <p align="center">
-  <img src="docs/images/architecture_diagram.png"
-       alt="Software architecture diagram for the motor winding optimisation framework"
-       width="900">
+  <img src="docs/images/full_motor_model_3d.png"
+       alt="3D electric motor model used as part of the wider winding design and simulation workflow"
+       width="700">
 </p>
 
 ```mermaid
@@ -179,10 +199,24 @@ legacy/
 
 docs/
 └── images/
-    ├── workflow_overview.png
-    ├── architecture_diagram.png
-    ├── orderly_stage2_layout.png
-    └── layers_stage5_layout.png
+    ├── optislang_workflow_overview.png
+    ├── hybrid_motor_model.png
+    ├── generated_winding_layout_1.png
+    ├── generated_winding_layout_2.png
+    ├── structured_winding_layout.png
+    ├── full_motor_model_3d.png
+    ├── loss_density_slot_detail.png
+    ├── loss_density_full_machine.png
+    └── optimisation_result_scatter.png
+
+examples/
+├── generated_vbs/
+│   ├── sample_orderly_stage2.vbs
+│   └── sample_layers_stage5.vbs
+└── sample_outputs/
+    ├── sample_simulation_results.xlsx
+    ├── sample_objective_outputs.xlsx
+    └── sample_summary.csv
 ```
 
 ---
@@ -234,6 +268,62 @@ Refactored experiment workflow for a **layered winding configuration** optimisat
 OptiSLang interconnect for the Layered Stage 5 experiment.
 
 These representative workflows were selected to demonstrate how the original research scripts can be transformed into cleaner, testable software modules without losing the underlying engineering logic.
+
+---
+
+## Example artefacts
+
+Representative workflow artefacts are included in the `examples/` directory to show the kinds of files produced by the automation pipeline without requiring the full original research archive.
+
+### Generated Maxwell automation scripts
+
+The `examples/generated_vbs/` folder contains representative **generated Maxwell VBScript automation files**. These illustrate the kind of scripted geometry creation, setup, and simulation control generated by the Python workflow before being executed inside Ansys Maxwell.
+
+Typical contents include:
+
+- generated conductor and coil geometry construction commands
+- Maxwell material / setup / analysis definitions
+- commands for simulation execution and export of results
+
+### Representative simulation and optimisation outputs
+
+The `examples/sample_outputs/` folder contains **representative output files** exported by the workflow, such as:
+
+- simulation result spreadsheets
+- optimisation objective / response outputs
+- summary CSV files used for post-processing or review
+
+These example artefacts are included to make the repository easier to understand from an engineering-software perspective and to show the intermediate files produced by the workflow beyond the Python source code alone.
+
+---
+
+## Example simulation outputs
+
+The generated winding layouts are evaluated inside Maxwell to assess electromagnetic losses, efficiency, and performance trade-offs. The images below show representative slot-level and full-machine outputs from the broader research workflow.
+
+### Slot-level conductor loss distribution
+
+<p align="center">
+  <img src="docs/images/loss_density_slot_detail.png"
+       alt="Loss density contour plot showing slot-level conductor loss distribution for a generated winding configuration"
+       width="900">
+</p>
+
+### Full-machine electromagnetic loss distribution
+
+<p align="center">
+  <img src="docs/images/loss_density_full_machine.png"
+       alt="Full-machine loss density plot showing electromagnetic loss distribution across the motor cross-section"
+       width="760">
+</p>
+
+### Example optimisation result space
+
+<p align="center">
+  <img src="docs/images/optimisation_result_scatter.png"
+       alt="Optimisation scatter plot showing the explored design space and objective trade-offs for winding efficiency and motor losses"
+       width="760">
+</p>
 
 ---
 
